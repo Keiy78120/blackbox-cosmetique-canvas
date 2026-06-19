@@ -70,6 +70,11 @@ function Icon({ name, color = FG, size = 20 }) {
     target:  <><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></>,
     layers:  <><path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/></>,
     shield:  <><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6l8-3z"/></>,
+    server:  <><rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="13" width="18" height="7" rx="2"/><path d="M7 7.5h.01M7 16.5h.01"/></>,
+    brain:   <><path d="M9 3a3 3 0 00-3 3 3 3 0 00-2 5 3 3 0 002 5 3 3 0 003 3V3z"/><path d="M15 3a3 3 0 013 3 3 3 0 012 5 3 3 0 01-2 5 3 3 0 01-3 3V3z"/><path d="M12 3v18"/></>,
+    unlock:  <><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 017.9-1"/></>,
+    plug:    <><path d="M12 2v6M9 8h6v3a3 3 0 01-6 0V8z"/><path d="M12 14v8"/></>,
+    eye:     <><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></>,
     one:     <text x="12" y="16" fontSize="13" fontWeight="700" fill={color} stroke="none" textAnchor="middle" fontFamily="Aeonik, sans-serif">1</text>,
     two:     <text x="12" y="16" fontSize="13" fontWeight="700" fill={color} stroke="none" textAnchor="middle" fontFamily="Aeonik, sans-serif">2</text>,
     three:   <text x="12" y="16" fontSize="13" fontWeight="700" fill={color} stroke="none" textAnchor="middle" fontFamily="Aeonik, sans-serif">3</text>,
@@ -289,6 +294,62 @@ function SimpleBoard() {
   );
 }
 
+// ══════════════════ VUE D-STUDIO SOUVERAIN ══════════════════
+// Couche OPTIONNELLE par-dessus le Shopify (qui reste 100% portable — rassure Ayoub).
+// White-label STRICT : on ne nomme JAMAIS les outils internes (vkode/khube) — c'est « la
+// plateforme D-Studio ». Cadrage : option, jamais obligation. Rétention par la valeur, pas le piège.
+function SovereignBoard() {
+  const Z_TOP = 40;
+  const row0 = Z_TOP + ZONE_HEAD;
+  const RY = (n) => row0 + n * ROW;
+  // 3e zone (déblocage), sous les 2 premières colonnes — réutilise le rythme ZGAP.
+  const C_TOP = RY(1) + ROW + ZGAP;
+  const Ccard = (n) => C_TOP + ZONE_HEAD + n * ROW;
+  return (
+    <div style={{ position: 'relative', width: 2000, height: 1320 }}>
+      {/* ── Bandeau de réassurance (le 1er message : on ne vous enferme pas) ── */}
+      <div style={{ position: 'absolute', left: 40, top: 24, width: 1380, boxSizing: 'border-box',
+        background: '#fff', border: `1px solid ${LINE}`, borderLeft: `4px solid ${GREEN}`, borderRadius: 12,
+        padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 14, fontFamily: FONT,
+        boxShadow: '0 1px 3px rgba(24,24,27,.06)' }}>
+        <span style={{ width: 38, height: 38, flex: 'none', borderRadius: 9, display: 'grid',
+          placeItems: 'center', background: `${GREEN}1a` }}><Icon name="unlock" color={GREEN} size={22} /></span>
+        <div>
+          <div style={{ fontSize: 15, fontWeight: 800, letterSpacing: '-.02em', color: FG }}>Votre Shopify reste 100% à vous — ceci est une option, pas une dépendance</div>
+          <div style={{ fontSize: 12.5, color: MUT, marginTop: 4, lineHeight: 1.45 }}>La boutique, le thème et vos données restent portables et autonomes. La couche souveraine D-Studio s'ajoute par-dessus si vous la voulez, et se retire sans casser le site.</div>
+        </div>
+      </div>
+
+      {/* ── ZONE 1 — Back-office souverain self-host ── */}
+      <Zone x={40} y={140} num="1" title="Votre back-office souverain" sub="Hébergé chez vous, sous votre contrôle — la donnée ne quitte pas votre maison" color={SKY} />
+      <Card x={40}  y={140 + ZONE_HEAD} w={270} accent={SKY} icon="server" title="Plateforme D-Studio self-host"
+        lead="Un back-office unique au-dessus de Shopify." bullets={['Hébergé sur vos serveurs (souveraineté)', 'Catalogue, clients, commandes : une seule vue']} tags={[['v1','Option'],['stat','sur-mesure']]} />
+      <Card x={330} y={140 + ZONE_HEAD} w={270} accent={SKY} icon="shield" title="Donnée souveraine"
+        lead="Vos data restent chez vous, pas chez un éditeur." bullets={['RGPD natif · pas de revente data', 'Aucun tiers ne lit vos clients']} tags={[['v1','Option']]} />
+      <Card x={40}  y={RY(1) + 4} w={560} accent={SKY} wide icon="plug" title="Branché sur l'existant, sans remplacer"
+        lead="La couche se connecte à Shopify et aux apps — elle ne les remplace pas." bullets={['Webhooks + API Shopify (rien de propriétaire imposé)', 'Vous gardez Klaviyo, vos reviews, votre stack', 'On débranche la couche → le Shopify continue de tourner']} />
+
+      {/* ── ZONE 2 — IA centralisée à mémoire commune ── */}
+      <Zone x={920} y={140} num="2" title="IA centralisée à mémoire commune" sub="Une seule intelligence qui connaît tout votre écosystème — pas 5 outils qui s'ignorent" color={BRAND} />
+      <Card x={920}  y={140 + ZONE_HEAD} w={270} accent={BRAND} icon="brain" title="Mémoire partagée entre vos marques"
+        lead="L'IA se souvient d'un client sur TOUTES vos boutiques." bullets={['Cosmétique + Capsule + Store = un seul cerveau', 'Profil, historique, préférences unifiés']} tags={[['v1','Option · moat']]} />
+      <Card x={1210} y={140 + ZONE_HEAD} w={270} accent={BRAND} icon="sparkle" title="Assistant produit + support"
+        lead="Recommande et répond avec le contexte réel du client." bullets={['« Pour tes locks, prends X + Y »', 'Support 24/7 nourri par votre catalogue']} tags={[['v1','Option']]} />
+      <Card x={920}  y={RY(1) + 4} w={560} accent={BRAND} wide icon="eye" title="Pilotage : une IA qui voit tout, vous décidez"
+        lead="Tableau de bord IA centralisé sur l'ensemble du groupe." bullets={['Détecte les tendances cross-marques (un pic viral qui démarre)', 'Propose · vous validez — jamais d\'action automatique non contrôlée', 'La mémoire commune est l\'actif qui grandit avec vous (= rétention par la valeur)']} />
+
+      {/* ── ZONE 3 — Ce que ça débloque / pourquoi c'est nous ── */}
+      <Zone x={40} y={C_TOP} num="→" title="Pourquoi c'est notre domaine" sub="Le savoir-faire phygital BLACKBOX — ce qu'un studio Shopify lambda ne peut pas apporter" color={GREEN} />
+      <Card x={40}  y={Ccard(0)} w={270} accent={GREEN} icon="link" title="Le pont salon ↔ retrait colis"
+        lead="On maîtrise la logique salon — votre cœur de métier phygital." bullets={['Click & collect dans le bon BlackBox', 'Notre domaine, pas une découverte']} tags={[['stat','savoir-faire']]} />
+      <Card x={330} y={Ccard(0)} w={270} accent={GREEN} icon="refresh" title="Évolutif à votre rythme"
+        lead="On active la couche par briques, quand vous voulez." bullets={['Commencez Shopify seul', 'Ajoutez la couche souveraine plus tard']} tags={[['v1','V1 → V2']]} />
+      <Card x={620} y={Ccard(0)} w={270} accent={INK} icon="unlock" title="Réversible par design"
+        lead="Aucun verrou : vous partez quand vous voulez." bullets={['Export complet de vos données', 'Le Shopify survit sans nous']} tags={[['stat','anti lock-in']]} />
+    </div>
+  );
+}
+
 // ══════════════════ APP ══════════════════
 function App() {
   const [mode, setMode] = useState('tech');
@@ -321,7 +382,7 @@ function App() {
         <div style={{ display: 'flex', gap: 8, pointerEvents: 'auto' }}>
           <div style={{ display: 'inline-flex', background: '#f5f5f5', border: `1px solid ${LINE}`,
             borderRadius: 999, padding: 3, boxShadow: '0 2px 12px rgba(10,10,10,.08)' }}>
-            <Seg id="tech" label="Technique" /><Seg id="simple" label="Simple" />
+            <Seg id="tech" label="Technique" /><Seg id="simple" label="Simple" /><Seg id="sovereign" label="D-Studio souverain" />
           </div>
         </div>
       </div>
@@ -335,7 +396,7 @@ function App() {
 
       <DCViewport minScale={0.2} maxScale={2.5} style={{ position: 'absolute', inset: 0 }}>
         <div style={{ position: 'relative', padding: 80 }}>
-          {mode === 'tech' ? <TechBoard /> : <SimpleBoard />}
+          {mode === 'tech' ? <TechBoard /> : mode === 'simple' ? <SimpleBoard /> : <SovereignBoard />}
         </div>
       </DCViewport>
     </div>
