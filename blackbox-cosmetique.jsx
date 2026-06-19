@@ -96,7 +96,7 @@ function Tag({ kind, children }) {
 function Card({ x, y, w, accent = ROYAL, title, icon, lead, bullets, body, tags, big, wide }) {
   const { ref, off, handlers, dragging } = useDrag();
   return (
-    <div ref={ref} {...handlers} style={{ position: 'absolute', left: x, top: y, width: w, boxSizing: 'border-box',
+    <div ref={ref} {...handlers} data-dc-slot style={{ position: 'absolute', left: x, top: y, width: w, boxSizing: 'border-box',
       transform: `translate(${off.x}px, ${off.y}px)`, zIndex: dragging ? 60 : (off.x || off.y ? 20 : 'auto'),
       cursor: 'grab', touchAction: 'none',
       background: CARD, border: `1px solid ${LINE}`, borderTop: `3px solid ${accent}`,
@@ -232,7 +232,7 @@ const H_BEN = 150;                                          // hauteur fixe cart
 function Benefit({ x, y, w = CARD_W, icon, title, body, accent = ROYAL }) {
   const { ref, off, handlers, dragging } = useDrag();
   return (
-    <div ref={ref} {...handlers} style={{ position: 'absolute', left: x, top: y, width: w, height: H_BEN, boxSizing: 'border-box',
+    <div ref={ref} {...handlers} data-dc-slot style={{ position: 'absolute', left: x, top: y, width: w, height: H_BEN, boxSizing: 'border-box',
       transform: `translate(${off.x}px, ${off.y}px)`, zIndex: dragging ? 60 : (off.x || off.y ? 20 : 'auto'),
       cursor: 'grab', touchAction: 'none',
       background: CARD, border: `1px solid ${LINE}`, borderRadius: 14, padding: 18,
