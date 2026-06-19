@@ -59,12 +59,14 @@ function Tag({ kind, children }) {
     borderRadius: 5, background: c.bg, color: c.fg, whiteSpace: 'nowrap' }}>{children}</span>;
 }
 
-// ─── Carte-nœud whiteboard. icon = NOM d'icône SVG (jamais emoji). h = hauteur fixe (cohérence rangée). ───
-function Card({ x, y, w, h, accent = ROYAL, title, icon, body, tags, big, wide }) {
+// ─── Carte-nœud whiteboard. icon = nom d'icône SVG (jamais emoji).
+//     lead = 1 phrase courte (l'outil + l'essentiel). bullets = puces brèves (formatage humain).
+//     PAS de hauteur fixe : la carte s'ajuste au contenu COURT (textes simplifiés). ───
+function Card({ x, y, w, accent = ROYAL, title, icon, lead, bullets, body, tags, big, wide }) {
   return (
-    <div style={{ position: 'absolute', left: x, top: y, width: w, height: h, boxSizing: 'border-box',
+    <div style={{ position: 'absolute', left: x, top: y, width: w, boxSizing: 'border-box',
       background: CARD, border: `1px solid ${LINE}`, borderTop: `3px solid ${accent}`,
-      borderRadius: 12, padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 8,
+      borderRadius: 12, padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 9,
       boxShadow: '0 1px 3px rgba(24,24,27,.06)', fontFamily: FONT }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
         {icon
@@ -74,8 +76,17 @@ function Card({ x, y, w, h, accent = ROYAL, title, icon, body, tags, big, wide }
         <span style={{ fontSize: wide ? 15 : 13.5, fontWeight: 700, letterSpacing: '-.01em', color: FG }}>{title}</span>
       </div>
       {big && <div style={{ fontSize: 28, fontWeight: 800, letterSpacing: '-.03em', lineHeight: 1, color: accent }}>{big}</div>}
+      {lead && <div style={{ fontSize: 12.5, lineHeight: 1.45, color: FG, fontWeight: 500 }}>{lead}</div>}
+      {bullets && <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+        {bullets.map((b, i) => (
+          <div key={i} style={{ display: 'flex', gap: 7, alignItems: 'flex-start' }}>
+            <span style={{ width: 5, height: 5, borderRadius: '50%', background: accent, flex: 'none', marginTop: 6 }} />
+            <span style={{ fontSize: 12, lineHeight: 1.4, color: MUT }}>{b}</span>
+          </div>
+        ))}
+      </div>}
       {body && <div style={{ fontSize: 12.5, lineHeight: 1.5, color: MUT }}>{body}</div>}
-      {tags && <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginTop: 'auto', paddingTop: 4 }}>
+      {tags && <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, paddingTop: 2 }}>
         {tags.map(([k, t], i) => <Tag key={i} kind={k}>{t}</Tag>)}</div>}
     </div>
   );
@@ -103,56 +114,62 @@ function Wire({ d, color = '#c9cdd6', dash = '5 4' }) {
 
 // ══════════════════ VUE TECHNIQUE ══════════════════
 function TechBoard() {
+  // Grille : pas Y = 200px (assez pour 2-3 bullets sans débordement). Colonnes A/C/B/SEO séparées.
+  const RY = (n) => 130 + n * 200;   // rangée n de la colonne
   return (
-    <div style={{ position: 'relative', width: 2240, height: 1240 }}>
-      <svg width="2240" height="1240" style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
+    <div style={{ position: 'relative', width: 2260, height: 1360 }}>
+      <svg width="2260" height="1360" style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
         <defs>
           <marker id="bb-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
             <path d="M 0 0 L 10 5 L 0 10 z" fill="#c9cdd6" />
           </marker>
         </defs>
-        {/* A (stack) → C (la stack alimente la signature) */}
-        <Wire d="M 830 200 C 880 200, 880 200, 916 200" />
-        {/* C interconnexion → SEO (le fix = l'interconnexion) */}
-        <Wire d="M 1484 610 C 1560 610, 1560 470, 1636 470" color={ROYAL} />
       </svg>
 
-      {/* ZONE A — stack standard */}
-      <Zone x={40} y={36} num="A" title="Stack DTC standard" sub="On couvre tout l'écosystème Shopify 2026 · répond à la Q stack d'Ayoub" />
-      <Card x={40}  y={130} w={250} h={150} accent={ROYAL} title="Email / SMS" body={<><b style={{color:FG}}>Klaviyo</b> — leader natif Shopify, flows abandon / win-back. Alt : Attentive, Postscript.</>} tags={[['v1','V1']]} />
-      <Card x={310} y={130} w={250} h={150} accent={ROYAL} title="Reviews / UGC" body={<><b style={{color:FG}}>Judge.me</b> (couverture) ou <b style={{color:FG}}>Loox</b> (visuel avant/après). Alt : Okendo.</>} tags={[['v1','V1']]} />
-      <Card x={580} y={130} w={250} h={150} accent={ROYAL} title="Upsell / bundles" body={<><b style={{color:FG}}>Rebuy</b> — IA, upsell post-achat = +panier sur pic viral.</>} tags={[['v1','V1']]} />
-      <Card x={40}  y={300} w={250} h={150} accent={ROYAL} title="Fidélité / parrainage" body={<><b style={{color:FG}}>Smile.io</b> — referral = levier viral. Alt : LoyaltyLion.</>} tags={[['v1','V1']]} />
-      <Card x={310} y={300} w={250} h={150} accent={SKY}   title="Abonnements" icon="refresh" body={<><b style={{color:FG}}>Recharge</b> — routines cheveux = récurrence. Convertit le viral en LTV.</>} tags={[['v1','V1 light'],['v2','V2 full']]} />
-      <Card x={580} y={300} w={250} h={150} accent={ROYAL} title="Analytics / attribution" body={<><b style={{color:FG}}>Triple Whale</b> — ROI d'un pic. Alt : Northbeam (>100k$/mois).</>} tags={[['v1','V1']]} />
-      <Card x={40}  y={470} w={250} h={150} accent={ROYAL} title="Landing campagnes" body={<><b style={{color:FG}}>Replo</b> — A/B testing, landing virales (Ayoub : « landing campagnes »).</>} tags={[['v1','V1']]} />
-      <Card x={310} y={470} w={250} h={150} accent={AMBER} title="Search & discovery" body={<><b style={{color:FG}}>Algolia</b> — ingredients / AI search. V1 = Shopify natif suffit.</>} tags={[['v2','V2']]} />
-      <Card x={580} y={470} w={250} h={150} accent={AMBER} title="Retours / échanges" body={<><b style={{color:FG}}>Loop Returns</b> — échanges convertissent 35-55%, natif Klaviyo.</>} tags={[['v2','V2']]} />
-      <Card x={40}  y={620} w={520} accent={GREEN} title="Reco D-Studio — phaser, pas tout brancher au lancement" wide body="V1 = Klaviyo + Judge.me/Loox + Rebuy + Smile.io + Triple Whale + Replo. Chaque app = coût mensuel + complexité → on active le reste selon la traction." />
+      {/* ── ZONE A — stack standard (3 colonnes × 3 rangées) ── */}
+      <Zone x={40} y={36} num="A" title="Stack DTC standard" sub="On couvre tout l'écosystème Shopify · répond à la question stack d'Ayoub" />
+      <Card x={40}  y={RY(0)} w={250} accent={ROYAL} title="Email / SMS"      lead="Klaviyo" bullets={['Leader, natif Shopify', 'Flows abandon · win-back']} tags={[['v1','V1']]} />
+      <Card x={310} y={RY(0)} w={250} accent={ROYAL} title="Reviews / UGC"    lead="Judge.me ou Loox" bullets={['Loox = visuel avant/après', 'Idéal cosmétique']} tags={[['v1','V1']]} />
+      <Card x={580} y={RY(0)} w={250} accent={ROYAL} title="Upsell / bundles" lead="Rebuy" bullets={['Upsell IA post-achat', '+ panier sur un pic']} tags={[['v1','V1']]} />
+      <Card x={40}  y={RY(1)} w={250} accent={ROYAL} title="Fidélité"         lead="Smile.io" bullets={['Parrainage = levier viral', 'Alt : LoyaltyLion']} tags={[['v1','V1']]} />
+      <Card x={310} y={RY(1)} w={250} accent={SKY}   title="Abonnements" icon="refresh" lead="Recharge" bullets={['Routines cheveux = récurrence', 'Le viral devient de la LTV']} tags={[['v1','V1'],['v2','V2 full']]} />
+      <Card x={580} y={RY(1)} w={250} accent={ROYAL} title="Analytics"        lead="Triple Whale" bullets={['Mesure le ROI d’un pic', 'Alt : Northbeam']} tags={[['v1','V1']]} />
+      <Card x={40}  y={RY(2)} w={250} accent={ROYAL} title="Landing campagnes" lead="Replo" bullets={['A/B testing', 'Landing virales']} tags={[['v1','V1']]} />
+      <Card x={310} y={RY(2)} w={250} accent={AMBER} title="Search"           lead="Algolia" bullets={['Recherche IA · ingredients', 'V1 : natif Shopify suffit']} tags={[['v2','V2']]} />
+      <Card x={580} y={RY(2)} w={250} accent={AMBER} title="Retours"          lead="Loop Returns" bullets={['Échanges convertissent 35-55%', 'Natif Klaviyo']} tags={[['v2','V2']]} />
+      <Card x={40}  y={RY(3)} w={790} accent={GREEN} wide title="Reco — phaser, pas tout brancher au lancement"
+        bullets={['V1 : Klaviyo + Judge.me/Loox + Rebuy + Smile.io + Triple Whale + Replo', 'Chaque app = un coût mensuel → on active le reste selon la traction']} />
 
-      {/* ZONE C — signature (colonne milieu, y36→870, séparée de A par x) */}
-      <Zone x={920} y={36} num="C" title="Signature D-Studio" sub="Le concret, pas que du design · chiffres marché 2026" color={GREEN} />
-      <Card x={920}  y={130} w={270} h={158} accent={GREEN} title="Packshot 3D interactif" icon="rotate3d" body={<>Rotation/zoom/lumière → on VOIT la texture. <b style={{color:FG}}>Lazy-load au click, jamais au page-load</b> (sinon crash pic/4G).</>} tags={[['v1','V1 · TOP'],['stat','+94% conv'],['stat','-52% retours']]} />
-      <Card x={1210} y={130} w={270} h={158} accent={AMBER} title="AR try-on cheveux" icon="mirror" body={<>Voir le rendu sur soi. Engine custom 80-150k€. <b style={{color:FG}}>V1 = Snapchat Lens</b> (gratuit, viral) → V2 AR web.</>} tags={[['v1','V1 Lens'],['v2','V2 web'],['stat','+35% panier']]} />
-      <Card x={920}  y={360} w={270} h={158} accent={GREEN} title="Hero scroll premium" icon="sparkle" body={<>CSS parallax + GSAP = +23% scroll, +40% session, mobile-safe. Pas de WebGL scroll mobile.</>} tags={[['v1','V1'],['skip','pas WebGL mobile']]} />
-      <Card x={1210} y={360} w={270} h={158} accent={GREEN} title="Micro-interactions" icon="sparkle" body="Hover lift, CTA expand, add-to-cart pulse. ~3-5j, CSS GPU = perf nulle. Sert la DA minimaliste." tags={[['v1','V1 · quasi gratuit']]} />
-      <Card x={920}  y={560} w={560} accent={ROYAL} title="Interconnexion des sites du groupe" wide icon="link"
-        body={<>Compte unifié (<b style={{color:FG}}>Customer Account API</b>, natif 2026 — pas Multipass) + fidélité partagée (<b style={{color:FG}}>Smile.io</b> multi-store) + wishlist cross-site (GoWish). Si marques cohérentes → <b style={{color:FG}}>Shopify Markets</b> (1 store) = clients/checkout/loyalty unifiés, moins cher que N stores. Panier cross-site = mauvaise UX, on évite.</>}
-        tags={[['v1','V1/V2'],['stat','notre savoir-faire écosystème']]} />
+      {/* ── ZONE C — signature (colonne milieu) ── */}
+      <Zone x={920} y={36} num="C" title="Signature D-Studio" sub="Le concret qui nous différencie · chiffres marché 2026" color={GREEN} />
+      <Card x={920}  y={RY(0)} w={270} accent={GREEN} title="Packshot 3D interactif" icon="rotate3d" lead="On voit la texture du produit." bullets={['Rotation · zoom · lumière', 'Lazy-load au click (jamais au load)']} tags={[['v1','V1 · TOP'],['stat','+94% conv']]} />
+      <Card x={1210} y={RY(0)} w={270} accent={AMBER} title="AR try-on cheveux" icon="mirror" lead="Voir le rendu sur soi." bullets={['V1 : Snapchat Lens (gratuit, viral)', 'V2 : AR web (engine custom)']} tags={[['v1','V1 Lens'],['stat','+35% panier']]} />
+      <Card x={920}  y={RY(1)} w={270} accent={GREEN} title="Hero scroll premium" icon="sparkle" lead="Parallax CSS + GSAP." bullets={['+23% scroll · +40% session', 'Mobile-safe (pas de WebGL mobile)']} tags={[['v1','V1']]} />
+      <Card x={1210} y={RY(1)} w={270} accent={GREEN} title="Micro-interactions" icon="sparkle" lead="Le détail premium." bullets={['Hover, CTA, add-to-cart', '~3-5j · perf nulle (CSS GPU)']} tags={[['v1','V1 · quasi gratuit']]} />
+      <Card x={920}  y={RY(2)} w={560} accent={ROYAL} wide icon="link" title="Interconnexion des sites du groupe"
+        lead="Un seul écosystème, pas des sites isolés." bullets={['Compte unifié (Customer Account API, natif 2026)', 'Fidélité partagée (Smile.io) + wishlist cross-site', 'Marques cohérentes → Shopify Markets (1 store, moins cher)']} tags={[['v1','V1/V2'],['stat','notre savoir-faire']]} />
 
-      {/* ZONE B — reco CTO (SOUS la zone C, y780→1100 : plus aucune collision) */}
-      <Zone x={920} y={780} num="B" title="Reco CTO — votre cas" sub="Là où l'arbitrage technique compte vraiment" color={INK} />
-      <Card x={920}  y={874} w={270} h={158} accent={INK} title="Abonnements = pari récurrence" body="Cheveux texturés = entretien régulier. « Subscribe & Save » transforme un pic TikTok one-shot en revenu récurrent (LTV)." />
-      <Card x={1210} y={874} w={270} h={158} accent={RED} title="Perf = la vraie exigence cachée" icon="bolt" body={<>« Encaisser les pics » = <b style={{color:FG}}>architecture</b>, pas features. Budget 80% ops / 20% front : CDN edge, lazy-load total, LCP &lt; 2,5s.</>} tags={[['stat','lazy = survit 50×']]} />
-      <Card x={920}  y={1054} w={270} h={158} accent={INK} title="France + US = phaser" body={<>Sales Tax/TVA, CCPA/RGPD, 3PL distincts. <b style={{color:FG}}>Shopify Markets</b> gère par pays sans rebuild. FR d'abord, US phase 2.</>} />
-      <Card x={1210} y={1054} w={270} h={158} accent={INK} title="Reviews / CRO avant gros budget pub" body="Un tunnel qui convertit avant de scaler la pub : preuve sociale + A/B testing landing. Sinon on paie du trafic qui rebondit." />
+      {/* ── ZONE B — reco CTO (sous C) ── */}
+      <Zone x={920} y={RY(3)-26} num="B" title="Reco CTO — votre cas" sub="Là où l'arbitrage technique compte vraiment" color={INK} />
+      <Card x={920}  y={RY(3)+68} w={270} accent={INK} title="Abonnements = pari récurrence" lead="Cheveux texturés = entretien régulier." bullets={['« Subscribe & Save »', 'Le pic one-shot devient récurrent']} />
+      <Card x={1210} y={RY(3)+68} w={270} accent={RED} icon="bolt" title="Perf = l'exigence cachée" lead="Encaisser les pics = archi, pas features." bullets={['80% ops / 20% front', 'CDN edge · lazy-load · LCP < 2,5s']} tags={[['stat','lazy = survit 50×']]} />
+      <Card x={920}  y={RY(4)+68} w={270} accent={INK} title="France + US = phaser" lead="Shopify Markets gère par pays." bullets={['TVA/Sales Tax · RGPD/CCPA · 3PL', 'FR d’abord, US en phase 2']} />
+      <Card x={1210} y={RY(4)+68} w={270} accent={INK} title="Reviews avant gros budget pub" lead="Un tunnel qui convertit d'abord." bullets={['Preuve sociale + A/B testing', 'Sinon on paie du trafic qui rebondit']} />
 
-      {/* ZONE SEO/GEO (colonne droite, rapprochée x1640) */}
-      <Zone x={1640} y={36} num="?" title="SEO / GEO multi-site" sub="« Google aime de moins en moins le multi-site de groupe ? » — la réponse factuelle" color={AMBER} />
-      <Card x={1640} y={150} w={250} h={150} accent={RED}   title="Pas une pénalité compute" icon="shield" body="Le crawl budget n'est un sujet qu'au-delà de ~50-100k URLs → non-problème ici. Google ne déclasse pas « parce que ça coûte à crawler »." />
-      <Card x={1910} y={150} w={250} h={150} accent={AMBER} title="Handicap RÉEL" big="−25→40%" body={<>De trafic vs domaine unique. Cause : <b style={{color:FG}}>dilution d'autorité</b> (backlinks répartis) + <b style={{color:FG}}>cannibalisation</b> de mots-clés.</>} />
-      <Card x={1640} y={400} w={250} h={150} accent={ROYAL} title="GEO encore pire" big="GEO" body={<>Fragmenté → l'IA cite <b style={{color:FG}}>Sephora à votre place</b>. Consolidé + schema Organization → entité citable.</>} />
-      <Card x={1910} y={400} w={250} h={150} accent={GREEN} title="Le fix = l'interconnexion (C)" body="schema.org Organization (sameAs tous domaines) + cross-linking + sitemap consolidé + hreflang testé GSC + canonicals stricts. Un écosystème cohérent ne se cannibalise pas." tags={[['stat','= argument C']]} />
+      {/* ── ZONE SEO/GEO — diagnostic (colonne droite) ── */}
+      <Zone x={1640} y={36} num="?" title="SEO / GEO multi-site" sub="« Google aime de moins le multi-site de groupe ? » — le diagnostic" color={AMBER} />
+      <Card x={1640} y={RY(0)} w={250} accent={RED}   title="Pas une pénalité compute" icon="shield" lead="Le crawl budget = non-sujet ici." bullets={['Pertinent qu’au-delà de ~50-100k URLs', 'Google ne « facture » pas le crawl']} />
+      <Card x={1910} y={RY(0)} w={250} accent={AMBER} title="Handicap réel" big="−25→40%" bullets={['De trafic vs domaine unique', 'Dilution d’autorité + cannibalisation']} />
+      <Card x={1640} y={RY(1)} w={250} accent={ROYAL} title="GEO encore pire" big="GEO" bullets={['Fragmenté → l’IA cite Sephora', 'Consolidé → vous devenez citable']} />
+      <Card x={1910} y={RY(1)} w={250} accent={GREEN} title="Le fix = l'interconnexion" lead="Un écosystème relié ne se cannibalise pas." bullets={['= l’argument C']} tags={[['stat','= argument C']]} />
+
+      {/* ── ZONE SEO/GEO — quick wins concrets (deep-research 2026) ── */}
+      <Zone x={1640} y={RY(2)-26} num="✓" title="Quick wins GEO — 2026" sub="Pour être cité par Google ET les IA (ChatGPT, Perplexity)" color={GREEN} />
+      <Card x={1640} y={RY(2)+68} w={250} accent={ROYAL} icon="globe"  title="Entité de marque" lead="Wikidata + schema sameAs." bullets={['La source que tous les LLM lisent', 'Gratuit · ~2h']} tags={[['v1','V1 · quick win']]} />
+      <Card x={1910} y={RY(2)+68} w={250} accent={GREEN} icon="search" title="FAQ schema = citable" lead="67% de taux de citation IA." bullets={['Contenu extractible en <100 mots', 'Affirmation + source + chiffre']} tags={[['v1','V1'],['stat','67%']]} />
+      <Card x={1640} y={RY(3)+68} w={250} accent={SKY}   icon="layers" title="Autorité + Reddit" lead="Hub « cheveux texturés »." bullets={['Pillar + clusters = 2,8× plus cité', 'Reddit r/curlyhair + YouTube']} tags={[['v2','V2 · contenu']]} />
+      <Card x={1910} y={RY(3)+68} w={250} accent={AMBER} icon="flag"   title="Multi-pays propre" lead="hreflang FR / US / AR." bullets={['Sous-dossiers > domaines séparés', 'Tester en GSC · llms.txt racine']} tags={[['v1','V1'],['v2','V2']]} />
+      <Card x={1640} y={RY(4)+68} w={520} accent={ROYAL} wide icon="chart" title="Mesurable + vendable" lead="On mesure les citations IA (Profound / PEEC)." bullets={['Benchmark vs Sephora/concurrents', 'GEO-first = positionnement rare en France']} />
     </div>
   );
 }
