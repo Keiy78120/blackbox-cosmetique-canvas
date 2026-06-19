@@ -3,8 +3,39 @@
 // moteur design-canvas.jsx de Vlad réutilisé tel quel). Deux vues : Tech / Simple.
 // DS KHube : accent bleu royal #3A66D8 (jamais purple), base neutre shadcn, system font.
 
-const { useState } = React;
+const { useState, useRef } = React;
 const { DCViewport } = window;
+
+// ─── DnD simple : hook qui rend une carte absolue déplaçable à la souris. ───
+// Compense le zoom du viewport (--dc-inv-zoom posé par DCViewport) → drag 1:1.
+// stopPropagation au pointerdown → le pan du viewport ne se déclenche pas pendant le drag d'une carte.
+function useDrag() {
+  const ref = useRef(null);
+  const drag = useRef(null);
+  const [off, setOff] = useState({ x: 0, y: 0 });
+  const invZoom = () => {
+    const world = document.querySelector('[style*="--dc-inv-zoom"]');
+    const v = world && getComputedStyle(world).getPropertyValue('--dc-inv-zoom');
+    const n = parseFloat(v);
+    return Number.isFinite(n) && n > 0 ? n : 1;
+  };
+  const handlers = {
+    onPointerDown: (e) => {
+      if (e.button !== 0) return;
+      e.stopPropagation();
+      drag.current = { sx: e.clientX, sy: e.clientY, ox: off.x, oy: off.y, k: invZoom() };
+      ref.current?.setPointerCapture?.(e.pointerId);
+    },
+    onPointerMove: (e) => {
+      if (!drag.current) return;
+      const { sx, sy, ox, oy, k } = drag.current;
+      setOff({ x: ox + (e.clientX - sx) * k, y: oy + (e.clientY - sy) * k });
+    },
+    onPointerUp: (e) => { drag.current = null; ref.current?.releasePointerCapture?.(e.pointerId); },
+    onPointerCancel: () => { drag.current = null; },
+  };
+  return { ref, off, handlers, dragging: !!drag.current };
+}
 
 // ─── DS D-Studio tokens (dstudio-ui) — mode CLAIR (pas de noir dominant, demande Kevin) ───
 // Accent de marque = rouge #ef4444. Palette charts du DS pour les autres accents.
@@ -63,11 +94,14 @@ function Tag({ kind, children }) {
 //     lead = 1 phrase courte (l'outil + l'essentiel). bullets = puces brèves (formatage humain).
 //     PAS de hauteur fixe : la carte s'ajuste au contenu COURT (textes simplifiés). ───
 function Card({ x, y, w, accent = ROYAL, title, icon, lead, bullets, body, tags, big, wide }) {
+  const { ref, off, handlers, dragging } = useDrag();
   return (
-    <div style={{ position: 'absolute', left: x, top: y, width: w, boxSizing: 'border-box',
+    <div ref={ref} {...handlers} style={{ position: 'absolute', left: x, top: y, width: w, boxSizing: 'border-box',
+      transform: `translate(${off.x}px, ${off.y}px)`, zIndex: dragging ? 60 : (off.x || off.y ? 20 : 'auto'),
+      cursor: 'grab', touchAction: 'none',
       background: CARD, border: `1px solid ${LINE}`, borderTop: `3px solid ${accent}`,
       borderRadius: 12, padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 9,
-      boxShadow: '0 1px 3px rgba(24,24,27,.06)', fontFamily: FONT }}>
+      boxShadow: dragging ? '0 12px 32px rgba(24,24,27,.18)' : '0 1px 3px rgba(24,24,27,.06)', fontFamily: FONT }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
         {icon
           ? <span style={{ width: 26, height: 26, flex: 'none', borderRadius: 7, display: 'grid',
@@ -92,16 +126,23 @@ function Card({ x, y, w, accent = ROYAL, title, icon, lead, bullets, body, tags,
   );
 }
 
-// ─── Étiquette de zone (gros titre flottant sur le canevas) ───
-function Zone({ x, y, num, title, sub, color = ROYAL }) {
+// ─── SYSTÈME D'ESPACEMENT (hiérarchie spatiale cohérente) ───
+// Rythme vertical constant : le header de zone occupe une hauteur FIXE (titre même sur 2 lignes
+// + sous-titre + respiration) avant que les cartes commencent. Plus d'air ENTRE zones qu'À L'INTÉRIEUR.
+const ZONE_HEAD = 104;   // hauteur réservée au titre+sous-titre d'une zone avant la 1re carte
+const ROW = 196;         // pas vertical entre rangées de cartes d'une même zone
+const ZGAP = 72;         // respiration supplémentaire entre la fin d'une zone et la suivante
+
+// ─── Étiquette de zone — header à hauteur réservée (le titre peut wrapper sans coller les cartes) ───
+function Zone({ x, y, w = 420, num, title, sub, color = ROYAL }) {
   return (
-    <div style={{ position: 'absolute', left: x, top: y, fontFamily: FONT, width: 360 }}>
+    <div style={{ position: 'absolute', left: x, top: y, fontFamily: FONT, width: w, height: ZONE_HEAD }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
-        <span style={{ width: 30, height: 30, borderRadius: 8, background: color, color: '#fff',
+        <span style={{ width: 30, height: 30, flex: 'none', borderRadius: 8, background: color, color: '#fff',
           fontSize: 14, fontWeight: 800, display: 'grid', placeItems: 'center' }}>{num}</span>
-        <span style={{ fontSize: 23, fontWeight: 800, letterSpacing: '-.03em', color: FG }}>{title}</span>
+        <span style={{ fontSize: 22, fontWeight: 800, letterSpacing: '-.03em', color: FG, lineHeight: 1.1 }}>{title}</span>
       </div>
-      {sub && <div style={{ fontSize: 12.5, color: MUT, marginTop: 6, marginLeft: 41 }}>{sub}</div>}
+      {sub && <div style={{ fontSize: 12.5, color: MUT, marginTop: 8, marginLeft: 41 }}>{sub}</div>}
     </div>
   );
 }
@@ -114,11 +155,20 @@ function Wire({ d, color = '#c9cdd6', dash = '5 4' }) {
 
 // ══════════════════ VUE TECHNIQUE ══════════════════
 function TechBoard() {
-  // Grille : pas Y = 200px (assez pour 2-3 bullets sans débordement). Colonnes A/C/B/SEO séparées.
-  const RY = (n) => 130 + n * 200;   // rangée n de la colonne
+  // Rythme cohérent : chaque zone a une origine Y ; ses cartes commencent à origY+ZONE_HEAD,
+  // rangées espacées de ROW. Colonnes : A x40 · C/B x920 · SEO x1640.
+  const Z_TOP = 40;                          // origine Y commune des zones du haut (A, C, SEO)
+  const row0 = Z_TOP + ZONE_HEAD;            // 1re rangée de carte sous un header de zone à Z_TOP
+  const RY = (n) => row0 + n * ROW;          // rangée n d'une zone démarrant à Z_TOP
+  // Zone B : sous la zone C. C a 3 rangées (0,1,2) → fin ≈ RY(2)+hauteur carte wide. On laisse ZGAP.
+  const B_TOP = RY(2) + 230 + ZGAP;          // origine de la zone B (sous la carte Interconnexion de C)
+  const Bcard = (n) => B_TOP + ZONE_HEAD + n * ROW;
+  // Zone SEO quick-wins : sous le diagnostic (2 rangées).
+  const QW_TOP = RY(1) + ROW + ZGAP;         // origine de la sous-zone quick-wins
+  const QWcard = (n) => QW_TOP + ZONE_HEAD + n * ROW;
   return (
-    <div style={{ position: 'relative', width: 2260, height: 1360 }}>
-      <svg width="2260" height="1360" style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
+    <div style={{ position: 'relative', width: 2260, height: 1620 }}>
+      <svg width="2260" height="1620" style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
         <defs>
           <marker id="bb-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
             <path d="M 0 0 L 10 5 L 0 10 z" fill="#c9cdd6" />
@@ -149,12 +199,12 @@ function TechBoard() {
       <Card x={920}  y={RY(2)} w={560} accent={ROYAL} wide icon="link" title="Interconnexion des sites du groupe"
         lead="Un seul écosystème, pas des sites isolés." bullets={['Compte unifié (Customer Account API, natif 2026)', 'Fidélité partagée (Smile.io) + wishlist cross-site', 'Marques cohérentes → Shopify Markets (1 store, moins cher)']} tags={[['v1','V1/V2'],['stat','notre savoir-faire']]} />
 
-      {/* ── ZONE B — reco CTO (sous C) ── */}
-      <Zone x={920} y={RY(3)-26} num="B" title="Reco CTO — votre cas" sub="Là où l'arbitrage technique compte vraiment" color={INK} />
-      <Card x={920}  y={RY(3)+68} w={270} accent={INK} title="Abonnements = pari récurrence" lead="Cheveux texturés = entretien régulier." bullets={['« Subscribe & Save »', 'Le pic one-shot devient récurrent']} />
-      <Card x={1210} y={RY(3)+68} w={270} accent={RED} icon="bolt" title="Perf = l'exigence cachée" lead="Encaisser les pics = archi, pas features." bullets={['80% ops / 20% front', 'CDN edge · lazy-load · LCP < 2,5s']} tags={[['stat','lazy = survit 50×']]} />
-      <Card x={920}  y={RY(4)+68} w={270} accent={INK} title="France + US = phaser" lead="Shopify Markets gère par pays." bullets={['TVA/Sales Tax · RGPD/CCPA · 3PL', 'FR d’abord, US en phase 2']} />
-      <Card x={1210} y={RY(4)+68} w={270} accent={INK} title="Reviews avant gros budget pub" lead="Un tunnel qui convertit d'abord." bullets={['Preuve sociale + A/B testing', 'Sinon on paie du trafic qui rebondit']} />
+      {/* ── ZONE B — reco CTO (sous C, avec ZGAP de respiration) ── */}
+      <Zone x={920} y={B_TOP} num="B" title="Reco CTO — votre cas" sub="Là où l'arbitrage technique compte vraiment" color={INK} />
+      <Card x={920}  y={Bcard(0)} w={270} accent={INK} title="Abonnements = pari récurrence" lead="Cheveux texturés = entretien régulier." bullets={['« Subscribe & Save »', 'Le pic one-shot devient récurrent']} />
+      <Card x={1210} y={Bcard(0)} w={270} accent={RED} icon="bolt" title="Perf = l'exigence cachée" lead="Encaisser les pics = archi, pas features." bullets={['80% ops / 20% front', 'CDN edge · lazy-load · LCP < 2,5s']} tags={[['stat','lazy = survit 50×']]} />
+      <Card x={920}  y={Bcard(1)} w={270} accent={INK} title="France + US = phaser" lead="Shopify Markets gère par pays." bullets={['TVA/Sales Tax · RGPD/CCPA · 3PL', 'FR d’abord, US en phase 2']} />
+      <Card x={1210} y={Bcard(1)} w={270} accent={INK} title="Reviews avant gros budget pub" lead="Un tunnel qui convertit d'abord." bullets={['Preuve sociale + A/B testing', 'Sinon on paie du trafic qui rebondit']} />
 
       {/* ── ZONE SEO/GEO — diagnostic (colonne droite) ── */}
       <Zone x={1640} y={36} num="?" title="SEO / GEO multi-site" sub="« Google aime de moins le multi-site de groupe ? » — le diagnostic" color={AMBER} />
@@ -163,13 +213,13 @@ function TechBoard() {
       <Card x={1640} y={RY(1)} w={250} accent={ROYAL} title="GEO encore pire" big="GEO" bullets={['Fragmenté → l’IA cite Sephora', 'Consolidé → vous devenez citable']} />
       <Card x={1910} y={RY(1)} w={250} accent={GREEN} title="Le fix = l'interconnexion" lead="Un écosystème relié ne se cannibalise pas." bullets={['= l’argument C']} tags={[['stat','= argument C']]} />
 
-      {/* ── ZONE SEO/GEO — quick wins concrets (deep-research 2026) ── */}
-      <Zone x={1640} y={RY(2)-26} num="✓" title="Quick wins GEO — 2026" sub="Pour être cité par Google ET les IA (ChatGPT, Perplexity)" color={GREEN} />
-      <Card x={1640} y={RY(2)+68} w={250} accent={ROYAL} icon="globe"  title="Entité de marque" lead="Wikidata + schema sameAs." bullets={['La source que tous les LLM lisent', 'Gratuit · ~2h']} tags={[['v1','V1 · quick win']]} />
-      <Card x={1910} y={RY(2)+68} w={250} accent={GREEN} icon="search" title="FAQ schema = citable" lead="67% de taux de citation IA." bullets={['Contenu extractible en <100 mots', 'Affirmation + source + chiffre']} tags={[['v1','V1'],['stat','67%']]} />
-      <Card x={1640} y={RY(3)+68} w={250} accent={SKY}   icon="layers" title="Autorité + Reddit" lead="Hub « cheveux texturés »." bullets={['Pillar + clusters = 2,8× plus cité', 'Reddit r/curlyhair + YouTube']} tags={[['v2','V2 · contenu']]} />
-      <Card x={1910} y={RY(3)+68} w={250} accent={AMBER} icon="flag"   title="Multi-pays propre" lead="hreflang FR / US / AR." bullets={['Sous-dossiers > domaines séparés', 'Tester en GSC · llms.txt racine']} tags={[['v1','V1'],['v2','V2']]} />
-      <Card x={1640} y={RY(4)+68} w={520} accent={ROYAL} wide icon="chart" title="Mesurable + vendable" lead="On mesure les citations IA (Profound / PEEC)." bullets={['Benchmark vs Sephora/concurrents', 'GEO-first = positionnement rare en France']} />
+      {/* ── ZONE SEO/GEO — quick wins concrets (deep-research 2026), sous le diagnostic + ZGAP ── */}
+      <Zone x={1640} y={QW_TOP} num="✓" title="Quick wins GEO — 2026" sub="Pour être cité par Google ET les IA (ChatGPT, Perplexity)" color={GREEN} />
+      <Card x={1640} y={QWcard(0)} w={250} accent={ROYAL} icon="globe"  title="Entité de marque" lead="Wikidata + schema sameAs." bullets={['La source que tous les LLM lisent', 'Gratuit · ~2h']} tags={[['v1','V1 · quick win']]} />
+      <Card x={1910} y={QWcard(0)} w={250} accent={GREEN} icon="search" title="FAQ schema = citable" lead="67% de taux de citation IA." bullets={['Contenu extractible en <100 mots', 'Affirmation + source + chiffre']} tags={[['v1','V1'],['stat','67%']]} />
+      <Card x={1640} y={QWcard(1)} w={250} accent={SKY}   icon="layers" title="Autorité + Reddit" lead="Hub « cheveux texturés »." bullets={['Pillar + clusters = 2,8× plus cité', 'Reddit r/curlyhair + YouTube']} tags={[['v2','V2 · contenu']]} />
+      <Card x={1910} y={QWcard(1)} w={250} accent={AMBER} icon="flag"   title="Multi-pays propre" lead="hreflang FR / US / AR." bullets={['Sous-dossiers > domaines séparés', 'Tester en GSC · llms.txt racine']} tags={[['v1','V1'],['v2','V2']]} />
+      <Card x={1640} y={QWcard(2)} w={520} accent={ROYAL} wide icon="chart" title="Mesurable + vendable" lead="On mesure les citations IA (Profound / PEEC)." bullets={['Benchmark vs Sephora/concurrents', 'GEO-first = positionnement rare en France']} />
     </div>
   );
 }
@@ -180,10 +230,13 @@ function TechBoard() {
 const CARD_W = 416, GUT = 28, COL2 = CARD_W + GUT;          // largeur carte + 2e colonne
 const H_BEN = 150;                                          // hauteur fixe carte bénéfice
 function Benefit({ x, y, w = CARD_W, icon, title, body, accent = ROYAL }) {
+  const { ref, off, handlers, dragging } = useDrag();
   return (
-    <div style={{ position: 'absolute', left: x, top: y, width: w, height: H_BEN, boxSizing: 'border-box',
+    <div ref={ref} {...handlers} style={{ position: 'absolute', left: x, top: y, width: w, height: H_BEN, boxSizing: 'border-box',
+      transform: `translate(${off.x}px, ${off.y}px)`, zIndex: dragging ? 60 : (off.x || off.y ? 20 : 'auto'),
+      cursor: 'grab', touchAction: 'none',
       background: CARD, border: `1px solid ${LINE}`, borderRadius: 14, padding: 18,
-      display: 'flex', gap: 14, boxShadow: '0 1px 3px rgba(24,24,27,.06)', fontFamily: FONT }}>
+      display: 'flex', gap: 14, boxShadow: dragging ? '0 12px 32px rgba(24,24,27,.18)' : '0 1px 3px rgba(24,24,27,.06)', fontFamily: FONT }}>
       <div style={{ width: 40, height: 40, flex: 'none', borderRadius: 10,
         display: 'grid', placeItems: 'center', background: `${accent}1a` }}><Icon name={icon} color={accent} /></div>
       <div style={{ minWidth: 0 }}>
@@ -277,7 +330,7 @@ function App() {
       <div style={{ position: 'fixed', bottom: 16, left: 16, zIndex: 100, background: '#fff',
         border: `1px solid ${LINE}`, borderRadius: 9, padding: '7px 12px', fontSize: 11.5, color: MUT,
         boxShadow: '0 2px 12px rgba(10,10,10,.08)' }}>
-        Glisser pour déplacer · molette / pinch pour zoomer · glisser une carte pour la ranger
+        Glisser le fond = déplacer · molette / pinch = zoomer · glisser une CARTE = la ranger
       </div>
 
       <DCViewport minScale={0.2} maxScale={2.5} style={{ position: 'absolute', inset: 0 }}>
