@@ -198,7 +198,7 @@ function TechBoard() {
       {/* ── ZONE C — signature (colonne milieu) ── */}
       <Zone x={920} y={36} num="C" title="Signature D-Studio" sub="Le concret qui nous différencie · chiffres marché 2026" color={GREEN} />
       <Card x={920}  y={RY(0)} w={270} accent={GREEN} title="Packshot 3D interactif" icon="rotate3d" lead="On voit la texture du produit." bullets={['Rotation · zoom · lumière', 'Lazy-load au click (jamais au load)']} tags={[['v1','V1 · TOP'],['stat','+94% conv']]} />
-      <Card x={1210} y={RY(0)} w={270} accent={AMBER} title="AR try-on cheveux" icon="mirror" lead="Voir le rendu sur soi." bullets={['V1 : Snapchat Lens (gratuit, viral)', 'V2 : AR web (engine custom)']} tags={[['v1','V1 Lens'],['stat','+35% panier']]} />
+      <Card x={1210} y={RY(0)} w={270} accent={AMBER} title="Zoom macro texture" icon="search" lead="Le fini réel, de près." bullets={['Crème, gel, poudre — le vrai rendu', 'Swatch nuancier au survol']} tags={[['v1','V1'],['stat','-⅓ retours']]} />
       <Card x={920}  y={RY(1)} w={270} accent={GREEN} title="Hero scroll premium" icon="sparkle" lead="Parallax CSS + GSAP." bullets={['+23% scroll · +40% session', 'Mobile-safe (pas de WebGL mobile)']} tags={[['v1','V1']]} />
       <Card x={1210} y={RY(1)} w={270} accent={GREEN} title="Micro-interactions" icon="sparkle" lead="Le détail premium." bullets={['Hover, CTA, add-to-cart', '~3-5j · perf nulle (CSS GPU)']} tags={[['v1','V1 · quasi gratuit']]} />
       <Card x={920}  y={RY(2)} w={560} accent={ROYAL} wide icon="link" title="Interconnexion des sites du groupe"
@@ -268,10 +268,10 @@ function SimpleBoard() {
   return (
     <div style={{ position: 'relative', width: R + W2 + 40, height: 980 }}>
       {/* ─ Promesse 1 (haut-gauche) ─ */}
-      <Zone x={L} y={36} num="1" title="Voir le produit, pas une photo" sub="La texture qui vend — en 3D et en essayage virtuel" />
+      <Zone x={L} y={36} num="1" title="Voir le produit, pas une photo" sub="La texture qui vend — en 3D et en macro" />
       <Benefit x={L}       y={130} icon="rotate3d" accent={GREEN} title="Le produit tourne, on voit la matière" body="Le client fait pivoter le flacon, zoome sur la crème, la voit attraper la lumière. Une texture qui bouge vend mieux qu'une photo figée." />
-      <Benefit x={L+COL2}  y={130} icon="mirror"   accent={AMBER} title="« Sur moi, ça donne quoi ? »" body="L'essayage en réalité augmentée laisse voir le rendu sur ses propres cheveux. L'outil qui rassure le plus avant d'acheter — et qui se partage tout seul." />
-      <Chiffre x={L} y={130+H_BEN+18} w={W2} accent={GREEN} big="+94 %" body="de ventes en plus avec la 3D / l'essayage, et un tiers de retours en moins (les gens savent ce qu'ils commandent)." />
+      <Benefit x={L+COL2}  y={130} icon="search"   accent={AMBER} title="« C'est quoi, cette texture ? »" body="Un zoom macro montre le fini réel — crème fondante, gel frais, poudre soyeuse. On voit exactement ce qu'on achète : ce qui rassure le plus avant de commander." />
+      <Chiffre x={L} y={130+H_BEN+18} w={W2} accent={GREEN} big="+94 %" body="de ventes en plus avec la 3D produit, et un tiers de retours en moins (les gens savent ce qu'ils commandent)." />
 
       {/* ─ Promesse 2 (bas-gauche) ─ */}
       <Zone x={L} y={420} num="2" title="Le site tient quand ça devient viral" sub="Un drop influenceur ne doit jamais faire tomber la boutique" color={INK} />
@@ -288,7 +288,7 @@ function SimpleBoard() {
       {/* ─ Comment on avance (bas-droite) : 2 cartes + 1 pleine largeur pour rester cohérent ─ */}
       <Zone x={R} y={420} num="→" title="Comment on avance" sub="On livre par étapes, on prouve, on amplifie" color={GREEN} />
       <Benefit x={R}       y={514} icon="one" accent={GREEN} title="V1 — le lancement" body="La boutique, la 3D produit, la base marketing — prête pour le viral dès le jour 1." />
-      <Benefit x={R+COL2}  y={514} icon="two" accent={AMBER} title="V2 — l'amplification" body="Essayage augmenté, abonnements, optimisation — activés quand le volume le justifie." />
+      <Benefit x={R+COL2}  y={514} icon="two" accent={AMBER} title="V2 — l'amplification" body="Diagnostic peau, abonnements, optimisation — activés quand le volume le justifie." />
       <Chiffre x={R} y={514+H_BEN+18} w={W2} accent={ROYAL} big="FR → US" body=": on lance la France, puis on active les États-Unis sans tout refaire (config par pays, pas un nouveau site)." />
     </div>
   );
