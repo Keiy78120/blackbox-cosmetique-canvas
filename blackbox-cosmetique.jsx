@@ -182,7 +182,7 @@ function TechBoard() {
       </svg>
 
       {/* ── ZONE A — stack standard (3 colonnes × 3 rangées) ── */}
-      <Zone x={40} y={36} num="A" title="Stack DTC standard" sub="On couvre tout l'écosystème Shopify · répond à la question stack d'Ayoub" />
+      <Zone x={40} y={36} num="A" title="Stack DTC standard" sub="On couvre tout l'écosystème Shopify · la stack tech est déjà standard" />
       <Card x={40}  y={RY(0)} w={250} accent={ROYAL} title="Email / SMS"      lead="Klaviyo" bullets={['Leader, natif Shopify', 'Flows abandon · win-back']} tags={[['v1','V1']]} />
       <Card x={310} y={RY(0)} w={250} accent={ROYAL} title="Reviews / UGC"    lead="Judge.me ou Loox" bullets={['Loox = visuel avant/après', 'Idéal cosmétique']} tags={[['v1','V1']]} />
       <Card x={580} y={RY(0)} w={250} accent={ROYAL} title="Upsell / bundles" lead="Rebuy" bullets={['Upsell IA post-achat', '+ panier sur un pic']} tags={[['v1','V1']]} />
@@ -295,7 +295,7 @@ function SimpleBoard() {
 }
 
 // ══════════════════ VUE PLATEFORME D-STUDIO ══════════════════
-// Couche OPTIONNELLE par-dessus le Shopify (qui reste 100% portable — rassure Ayoub).
+// Couche OPTIONNELLE par-dessus le Shopify (qui reste 100% portable — anti-lock-in).
 // White-label STRICT : on ne nomme JAMAIS les outils internes (vkode/khube) — c'est « la
 // plateforme D-Studio ». Cadrage : option, jamais obligation. Rétention par la valeur, pas le piège.
 function SovereignBoard() {
