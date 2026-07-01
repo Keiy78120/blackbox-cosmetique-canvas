@@ -382,7 +382,7 @@ function App() {
         <div style={{ display: 'flex', gap: 8, pointerEvents: 'auto' }}>
           <div style={{ display: 'inline-flex', background: '#f5f5f5', border: `1px solid ${LINE}`,
             borderRadius: 999, padding: 3, boxShadow: '0 2px 12px rgba(10,10,10,.08)' }}>
-            <Seg id="tech" label="Technique" /><Seg id="simple" label="Simple" /><Seg id="sovereign" label="Plateforme D-Studio" />
+            <Seg id="tech" label="Technique" /><Seg id="simple" label="Simple" />{/* ponytail: onglet « Plateforme D-Studio » masqué (demande Kevin) — SovereignBoard conservé, réactiver en remettant ce Seg */}
           </div>
         </div>
       </div>
@@ -396,7 +396,7 @@ function App() {
 
       <DCViewport minScale={0.2} maxScale={2.5} style={{ position: 'absolute', inset: 0 }}>
         <div style={{ position: 'relative', padding: 80 }}>
-          {mode === 'tech' ? <TechBoard /> : mode === 'simple' ? <SimpleBoard /> : <SovereignBoard />}
+          {mode === 'tech' ? <TechBoard /> : <SimpleBoard />}
         </div>
       </DCViewport>
     </div>
